@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const { boolean } = require("joi");
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -17,6 +18,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     minlength: 8,
+  },
+  biz: {
+    type: Boolean,
+    default: false,
   },
 });
 
