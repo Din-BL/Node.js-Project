@@ -1,20 +1,20 @@
 const Joi = require("joi");
 
 module.exports.registerSchema = Joi.object({
-  name: Joi.string().trim().required().min(3).max(25),
-  email: Joi.string().trim().email().required().lowercase(),
-  password: Joi.string().required().min(8),
+  name: Joi.string().trim().min(3).max(30).required(),
+  email: Joi.string().trim().lowercase().email().required(),
+  password: Joi.string().trim().min(8).max(128).required(),
   biz: Joi.boolean().default(false),
 });
 
 module.exports.loginSchema = Joi.object({
-  email: Joi.string().trim().email().required().lowercase(),
-  password: Joi.string().required().min(8),
+  email: Joi.string().trim().lowercase().email().required(),
+  password: Joi.string().trim().min(8).max(128).required(),
 });
 
 module.exports.businessSchema = Joi.object({
-  name: Joi.string().trim().required().min(3).max(25),
-  description: Joi.string().trim().required(),
+  name: Joi.string().alphanum().min(3).max(30).required(),
+  description: Joi.string().trim().max(200).required(),
   address: Joi.string().trim().required(),
   phone: Joi.string().trim().required(),
   image: Joi.string().trim().uri().required(),
