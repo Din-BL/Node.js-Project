@@ -51,7 +51,7 @@ router.post("/register", userValidate, async (req, res) => {
     const { password, __v, biz, ...rest } = user;
     res.json(rest);
   } catch (error) {
-    res.status(400).json(error.message);
+    res.status(400).json("Email already exists");
   }
 });
 

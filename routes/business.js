@@ -23,7 +23,7 @@ const businessValidate = (req, res, next) => {
 const businessAuthenticate = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
-  if (!token) return res.sendStatus(404);
+  if (!token) return res.sendStatus(401);
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
     if (err) return res.sendStatus(401);
     req.user = user;
@@ -45,11 +45,49 @@ router.delete("/init", async (req, res) => {
 router.post("/", businessAuthenticate, businessValidate, async (req, res) => {
   try {
     const bizCheck = await User.findOne({ email: req.user.email });
-    !bizCheck.biz && res.status(400).json("Must be a business");
+    !bizCheck.biz && res.status(400).json("Must have a business");
     const business = new Business(req.body);
     business.user_id = bizCheck.id;
     await business.save();
     res.json(business);
+  } catch (error) {
+    res.status(400).json(error.message);
+  }
+});
+
+router.get("/:id", businessAuthenticate, async (req, res) => {
+  try {
+    const findBusiness = await Business.findById(req.params.id);
+    res.status(200).json(findBusiness);
+  } catch (error) {
+    res.status(400).json(error.message);
+  }
+});
+
+router.put("/:id", businessAuthenticate, async (req, res) => {
+  try {
+    const updateBusiness = await Business.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    res.status(200).json(updateBusiness);
+  } catch (error) {
+    res.status(400).json(error.message);
+  }
+});
+
+router.delete("/:id", businessAuthenticate, async (req, res) => {
+  try {
+    const deleteBusiness = await Business.findByIdAndDelete(req.params.id);
+    !deleteBusiness && res.status(400).json("Business doest exist");
+    res.status(200).json("Business been deleted");
+  } catch (error) {
+    res.status(400).json(error.message);
+  }
+});
+
+router.get("", businessAuthenticate, async (req, res) => {
+  try {
+    const userInfo = await User.findOne({ email: req.user.email });
+    const findBusinesses = await Business.find({ user_id: userInfo.id });
+    res.status(200).json(findBusinesses);
   } catch (error) {
     res.status(400).json(error.message);
   }
