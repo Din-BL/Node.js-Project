@@ -3,53 +3,29 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
+const _ = require("lodash");
+const config = require("config");
 const User = require("../models/user");
-const { registerSchema, loginSchema } = require("../utils/Validations");
+// const { registerSchema, loginSchema } = require("../utils/Validations");
+const { userValidate, userAuthenticate } = require("../utils/middleware");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
-
-// Middleware
-
-const userValidate = (req, res, next) => {
-  req.path === "/register" ? (schema = registerSchema) : (schema = loginSchema);
-  const { error } = schema.validate(req.body, { abortEarly: false });
-  if (error) {
-    res.status(400);
-    res.json(error.details.map((msg) => msg.message));
-  } else {
-    next();
-  }
-};
-
-const userAuthenticate = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  if (token === undefined) return res.sendStatus(401);
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-    if (err) return res.sendStatus(401);
-    req.user = user;
-    next();
-  });
-};
 
 // Routes
 
 router.delete("/init", async (req, res) => {
   try {
     const deletion = await User.deleteMany();
-    res.json(`${deletion.deletedCount} Users been deleted`);
+    res.status(200).send(`${deletion.deletedCount} Users been deleted`);
   } catch (error) {
     res.sendStatus(400);
   }
 });
 
 router.post("/register", userValidate, async (req, res) => {
+  console.log("test");
   try {
-    let user = new User(req.body);
-    await user.save();
-    user = user.toObject();
-    const { password, __v, biz, ...rest } = user;
-    res.json(rest);
+    let user = await User.create(req.body);
+    res.json(_.pick(user, ["_id", "name", "email"]));
   } catch (error) {
     res.status(400).json("Email already exists");
   }
@@ -59,11 +35,10 @@ router.post("/login", userValidate, async (req, res) => {
   try {
     let findUser = await User.findOne({ email: req.body.email });
     if (await bcrypt.compare(req.body.password, findUser.password)) {
-      const token = jwt.sign(req.body, process.env.ACCESS_TOKEN_SECRET /*time-stamp*/);
+      const token = jwt.sign(req.body, config.get("ACCESS_TOKEN_SECRET") /*time-stamp*/);
       findUser = findUser.toObject();
-      const { password, __v, email, name, ...rest } = findUser;
-      rest.token = token;
-      res.json(rest);
+      findUser.token = token;
+      res.json(_.pick(findUser, ["_id", "biz", "token"]));
     } else res.status(400).json("Incorrect password");
   } catch (error) {
     res.status(400).json("Incorrect email");
@@ -73,9 +48,7 @@ router.post("/login", userValidate, async (req, res) => {
 router.get("/", userAuthenticate, async (req, res) => {
   try {
     let userDetails = await User.findOne({ email: req.user.email });
-    userDetails = userDetails.toObject();
-    delete userDetails.password;
-    res.json(userDetails);
+    res.json(_.pick(userDetails, ["_id", "name", "email", "biz"]));
   } catch (error) {
     res.sendStatus(401);
   }
