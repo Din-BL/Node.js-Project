@@ -48,7 +48,7 @@ router.post("/login", userValidate, async (req, res) => {
 router.get("/", userAuthenticate, async (req, res) => {
   try {
     let userDetails = await User.findOne({ email: req.user.email });
-    res.json(_.pick(userDetails, ["_id", "name", "email", "biz"]));
+    res.json(_.pick(userDetails, ["_id", "name", "email", "biz", "createdAt"]));
   } catch (error) {
     res.sendStatus(401);
   }

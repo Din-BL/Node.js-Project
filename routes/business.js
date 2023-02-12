@@ -22,6 +22,7 @@ router.post("/", userAuthenticate, userValidate, async (req, res) => {
     const bizCheck = await User.findOne({ email: req.user.email });
     !bizCheck.biz && res.status(400).send("Must have a business");
     const business = new Business(req.body);
+
     business.user_id = bizCheck.id;
     await business.save();
     res.json(business);

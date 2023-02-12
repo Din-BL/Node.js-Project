@@ -30,10 +30,25 @@ const businessSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
-  user_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+  number: {
+    type: String,
+    minlength: 3,
+    maxlength: 200,
+    unique: true,
   },
+  user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+});
+
+businessSchema.pre("save", async function (next) {
+  const user = this;
+  let random = Math.floor(Math.random() * 1000000);
+  let unique = await user.constructor.findOne({ number: random });
+  while (unique !== null) {
+    random = Math.floor(Math.random() * 1000000);
+    unique = await user.constructor.findOne({ number: random });
+  }
+  user.number = random;
+  next();
 });
 
 module.exports = mongoose.model("Business", businessSchema);
