@@ -13,7 +13,7 @@ module.exports.loginSchema = Joi.object({
 });
 
 module.exports.businessSchema = Joi.object({
-  name: Joi.string().alphanum().min(3).max(30).required(),
+  name: Joi.string().min(3).max(30).required(),
   description: Joi.string().trim().max(200).required(),
   address: Joi.string().trim().required(),
   phone: Joi.string().trim().required(),

@@ -14,8 +14,7 @@ const jwt = require("jsonwebtoken");
 router.delete("/init", async (req, res) => {
   try {
     const reset = await User.deleteMany();
-    console.log(reset);
-    if (!reset.deletedCount) return res.status(400).send("There are no registered users");
+    if (!reset.deletedCount) return res.status(404).send("There are no registered users");
     res.status(200).send(`Number of users that's been removed: ${reset.deletedCount}`);
   } catch (error) {
     res.sendStatus(400);
@@ -25,21 +24,22 @@ router.delete("/init", async (req, res) => {
 router.post("/register", userValidate, async (req, res) => {
   try {
     const user = await User.create(req.body);
-    res.json(_.pick(user, ["_id", "name", "email"]));
+    res.status(201).json(_.pick(user, ["_id", "name", "email"]));
   } catch (error) {
-    res.status(401).send(error.message);
+    if (error.message.includes("email")) return res.status(400).send("Email already exists");
+    res.status(400).send(error.message);
   }
 });
 
 router.post("/login", userValidate, async (req, res) => {
   try {
     let findUser = await User.findOne({ email: req.body.email });
-    if (!findUser) return res.status(400).send("User doest exist");
+    if (!findUser) return res.status(404).send("User doest exist");
     if (await bcrypt.compare(req.body.password, findUser.password)) {
       const token = jwt.sign(req.body, config.get("ACCESS_TOKEN_SECRET") /*time-stamp*/);
       findUser = findUser.toObject();
       findUser.token = token;
-      res.json(_.pick(findUser, ["_id", "biz", "token"]));
+      res.status(200).json(_.pick(findUser, ["_id", "biz", "token"]));
     } else res.status(400).send("Incorrect password");
   } catch (error) {
     res.status(400).send(error.message);
@@ -49,8 +49,8 @@ router.post("/login", userValidate, async (req, res) => {
 router.get("/", userAuthenticate, async (req, res) => {
   try {
     const userDetails = await User.findOne({ email: req.user.email });
-    if (!userDetails) return res.status(400).send("User doest exist");
-    res.json(_.pick(userDetails, ["_id", "name", "email", "biz", "createdAt"]));
+    if (!userDetails) return res.status(404).send("User doest exist");
+    res.status(200).json(_.pick(userDetails, ["_id", "name", "email", "biz", "createdAt"]));
   } catch (error) {
     res.status(400).send(error.message);
   }
