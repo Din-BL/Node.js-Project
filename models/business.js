@@ -32,13 +32,12 @@ const businessSchema = new mongoose.Schema({
   },
   number: {
     type: String,
-    minlength: 3,
-    maxlength: 200,
     unique: true,
   },
   user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 
+// Generating random numbers before saving them to the database
 businessSchema.pre("save", async function (next) {
   const user = this;
   let random = Math.floor(Math.random() * 1000000);

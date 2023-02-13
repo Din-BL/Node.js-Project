@@ -18,8 +18,8 @@ module.exports.userValidate = (req, res, next) => {
 
 module.exports.userAuthenticate = (req, res, next) => {
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  if (token === undefined) return res.sendStatus(401);
+  if (!authHeader) return res.sendStatus(401);
+  const token = authHeader.split(" ")[1];
   jwt.verify(token, config.get("ACCESS_TOKEN_SECRET"), (err, user) => {
     if (err) return res.sendStatus(401);
     req.user = user;
