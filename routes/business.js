@@ -6,7 +6,7 @@ const Business = require("../models/business");
 const User = require("../models/user");
 const { userValidate, userAuthenticate } = require("../utils/middleware");
 
-// Routes
+// Endpoints
 
 router.delete("/init", async (req, res) => {
   try {
@@ -20,7 +20,7 @@ router.delete("/init", async (req, res) => {
 
 router.post("/", userAuthenticate, userValidate, async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.user.email });
+    const user = await User.findOne({ email: req.user.sub });
     if (!user) return res.status(404).send("User doest exist");
     if (!user.biz) return res.status(403).send("Must be a business owner");
     const business = new Business(req.body);
@@ -64,7 +64,7 @@ router.delete("/:id", userAuthenticate, async (req, res) => {
 
 router.get("", userAuthenticate, async (req, res) => {
   try {
-    const userInfo = await User.findOne({ email: req.user.email });
+    const userInfo = await User.findOne({ email: req.user.sub });
     if (!userInfo) return res.status(404).send("User doest exist");
     const findBusinesses = await Business.find({ user_id: userInfo.id });
     if (!findBusinesses) return res.status(404).send("User has no registered businesses");
