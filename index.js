@@ -8,6 +8,6 @@ app.use(express.json());
 app.use("/user", user);
 app.use("/business", business);
 
-app.listen(3000, () => {
-  console.log("listening at http://localhost:3000");
+app.listen(8000, () => {
+  console.log("listening at http://localhost:8000");
 });
